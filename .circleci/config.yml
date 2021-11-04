@@ -13,17 +13,21 @@ jobs:
     resource_class: << parameters.rc >>
     steps:
       - run:
-          name: Get total CPUs in machine
+          name: Get total CPUs in machine via Python
           command: |
             python -c "import multiprocessing; print(multiprocessing.cpu_count())"
             python -c "import os; print(os.cpu_count())"
       - run:
-          name: Get total CPUs available for our process
+          name: Get total CPUs available for our process via Python
           command: |
             # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.cpu_count
             # NOTE: os.sched_getaffinity is available only on certain Linux environments.
             # See https://stackoverflow.com/a/42539514
             python -c "import os; print(len(os.sched_getaffinity(0)))"
+      - run:
+          name: Get total CPUs available for our process with nproc
+          command: nproc
+
 workflows:
   main:
     jobs:
