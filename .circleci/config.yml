@@ -1,17 +1,37 @@
 version: 2.1
 
 jobs:
-  echo:
+  inspect:
+    parameters:
+      rc:
+        type: enum
+        default: small
+        description: resource class
+        enum: ["small", "medium", "large", "xlarge"]
     docker:
-      - image: cimg/base:stable
+      - image: cimg/python:3.8
+    resource_class: << parameters.rc >>
     steps:
       - run:
-          name: Greet
-          command: echo "I love ${COLOR} builds."
-          environment:
-            COLOR: "green"
-
+          name: Get total CPUs in machine
+          command: |
+            python -c "import multiprocessing; print(multiprocessing.cpu_count())"
+            python -c "import os; print(os.cpu_count())"
+      - run:
+          name: Get total CPUs available for our process
+          command: |
+            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.cpu_count
+            # NOTE: os.sched_getaffinity is available only on certain Linux environments.
+            # See https://stackoverflow.com/a/42539514
+            python -c "import os; print(len(os.sched_getaffinity(0)))"
 workflows:
   main:
     jobs:
-      - echo
+      - inspect:
+          matrix:
+            parameters:
+              rc:
+                - small
+                - medium
+                - large
+                - xlarge
